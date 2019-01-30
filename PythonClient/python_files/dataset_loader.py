@@ -18,8 +18,7 @@ def read_config(config_path):
     with open(config_path) as fp:
         config.read_file(itertools.chain(['[global]'], fp), source=config_path)
     d = config['global']
-    return np.float64(d['pitch'])
-    #return np.array(list(map(float, [d['roll'], d['pitch'], d['yaw']])))
+    return np.array(list(map(np.float64, [d['roll'], d['pitch'], d['yaw']])))
 
 def read_image(image_path, shape=(160, 120, 1)):
     w, h, c = shape
@@ -48,9 +47,18 @@ def get_car_info(measurements_path):
     json_str = json_file.read()
     json_data = json.loads(json_str)
     speed = json_data['playerMeasurements']['forwardSpeed']
+    steer = 0
+    throttle = 0
+    brake = 0
+    autopilot_dict = json_data['playerMeasurements']['autopilotConrol']
     steer = json_data['playerMeasurements']['autopilotControl']['steer']
-    throttle = json_data['playerMeasurements']['autopilotControl']['throttle']
-    return np.float64(speed), np.float64(steer), np.float64(throttle)
+    if 'throttle' in autopilot_dict:
+        throttle = autopilot_dict['throttle']
+    if 'brake' in autopilot_dict:
+        brake = autopilot_dict['brake']
+    if 'steer' in autopilot_dict:
+        steer = autopilot_dict['steer']
+    return np.float64(speed), np.float64(steer), np.float64(throttle), np.float64(brake)
 
 read_image_vec = np.vectorize(read_image)
 

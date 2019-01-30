@@ -1,4 +1,4 @@
-from . import dataset_loader
+import dataset_loader
 
 import keras
 from keras import optimizers
