@@ -18,7 +18,6 @@ import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 import os
 
-
 def main(args):
     t = time.time()
     #camera_dir = args.sensor
@@ -30,13 +29,13 @@ def main(args):
     datasets = ast.literal_eval(args.datasets)
     columns = ast.literal_eval(args.columns)
 
-    X, Y = dataset_loader.loadXY(*datasets[0], columns=columns)
+    X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns)
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.5, shuffle=False)
     X_test, X_val, Y_test, Y_val = train_test_split(X, Y, test_size=0.5)
 
     for dataset in datasets[1:]:
-        X2, Y2 = dataset_loader.loadXY(*dataset)
+        X2, Y2 = dataset_loader.loadXY(args.datasets_root, *dataset, columns=columns)
         X_train = np.concatenate([X_train, X2])
         Y_train = np.concatenate([Y_train, Y2])
 
@@ -147,6 +146,12 @@ if __name__ == '__main__':
            default=None,
            required=True,
            help='Columns to predict in Y in format [\'col1\', \'col2\'].')
+    argparser.add_argument(
+           '--datasets-root',
+           metavar='DATASET',
+           dest='datasets_root',
+           default='/home/vlad/nvidia/datasets',
+           help='Datasets root folder.')
 
     args = argparser.parse_args()
     main(args)
