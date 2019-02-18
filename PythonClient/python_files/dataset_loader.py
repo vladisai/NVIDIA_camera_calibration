@@ -13,9 +13,8 @@ from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_a
 
 config_path = 'configs/000000_config'
 measurements_dir = 'measurements'
-datasets_root = '/home/vlad/datasets'
 
-def loadXY(path, percentage, columns):
+def loadXY(datasets_root, path, percentage, columns):
     print('loading ', path)
     X = np.load(os.path.join(datasets_root, path, 'X.npy'))
     #Y = np.stack(np.load(os.path.join(datasets_root, path, 'Y.npy')))
