@@ -18,9 +18,8 @@ import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 import os
 
-datasets_root = '/home/vlad/nvidia/datasets'
 
-def loadXY(path, percentage):
+def loadXY(datasets_root, path, percentage):
     print('loading ', path)
     X = np.load(os.path.join(datasets_root, path, 'X.npy'))
     Y = np.stack(np.load(os.path.join(datasets_root, path, 'Y.npy')))
@@ -39,13 +38,13 @@ def main(args):
     #X = np.load(dataset[:, 0]
     #Y = np.stack(dataset[:, 2]).astype(np.float64)
     datasets = ast.literal_eval(args.datasets)
-    X, Y = loadXY(*datasets[0])
+    X, Y = loadXY(args.datasets_root, *datasets[0])
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, shuffle=False)
     X_test, X_val, Y_test, Y_val = train_test_split(X, Y, test_size=0.3)
 
     for dataset in datasets[1:]:
-        X2, Y2 = loadXY(*dataset)
+        X2, Y2 = loadXY(args.datasets_root, *dataset)
         X_train = np.concatenate([X_train, X2])
         Y_train = np.concatenate([Y_train, Y2])
 
@@ -149,6 +148,12 @@ if __name__ == '__main__':
            default=None,
            required=True,
            help='datasets list in format (\'name\', percentage). The first dataset will be validated and tested against.')
+    argparser.add_argument(
+           '--datasets-root',
+           metavar='DATASET',
+           dest='datasets_root',
+           default='/home/vlad/nvidia/datasets',
+           help='Datasets root folder.')
 
     args = argparser.parse_args()
     main(args)
