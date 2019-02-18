@@ -6,43 +6,42 @@ import sys
 import argparse
 import time
 import os
+import pandas as pd
 
 def main(args):
     t = time.time()
-    base_path_input = '/run/media/vlad/326c1b61-b264-486c-b0cb-4258027fb67a/datasets/'
-    base_path_output = '/home/vlad/nvidia/external_datasets/'
-    path = os.path.join(base_path_input, args.input)
+    path = '/home/vlad/datasets/{}'.format(args.input)
     camera_dir = args.sensor
 
-    output_path = os.path.join(base_path_output, args.output)
+    output_path = '/home/vlad/datasets/{}'.format(args.output)
     input_shape = (args.width, args.height, args.channels)
 
-    dataset = dataset_loader.Dataset(path, camera_dir, limit=args.dataset_limit).get_dataset()
-    X = dataset[:, 0]
+    dataset = dataset_loader.Dataset(path, camera_dir, limit=args.dataset_limit, pairs=args.pairs).get_dataset()
+
+    X = None
+    Y = None
+    if args.pairs:
+        X = dataset[:, [0, 1]]
+        Y = np.stack(dataset[:, 2:]).astype(np.float64)
+        X = dataset_loader.transform_double(X, input_shape)
+    else:
+        X = dataset[:, 0]
+        Y = np.stack(dataset[:, 1:]).astype(np.float64)
+        X = dataset_loader.transform_batch(X, input_shape)
 
     try:
         os.makedirs(output_path)
     except:
         pass
 
-    if args.batch_size == -1:
-        X = dataset_loader.transform_batch(X, input_shape)
-        Y = np.stack(dataset[:, 1:]).astype(np.float64)
-
-        np.save(os.path.join(output_path, 'Y'), Y)
-        np.save(os.path.join(output_path, 'X'), X)
-        print('done')
-
-    else:
-        for i in range(0, len(X), args.batch_size):
-            indices = range(i, min(len(X), i + args.batch_size))
-            X_ = dataset_loader.transform_batch(X[indices], input_shape)
-            Y_ = dataset[indices, 1:].astype(np.float64)
-
-            np.save(os.path.join(output_path, 'Y_{}'.format(i)), Y_)
-            np.save(os.path.join(output_path, 'X_{}'.format(i)), X_)
-            print('finished {}/{}'.format(i, len(X)))
-
+    np.save(os.path.join(output_path, 'Y'), Y)
+    np.save(os.path.join(output_path, 'X'), X)
+    #pdx = pd.DataFrame(data=X)
+    pdy = pd.DataFrame(data=Y, 
+            columns=['roll', 'pitch', 'yaw', 'speed', 'steer', 'throttle', 'brake']
+            )
+    pdy.to_csv(os.path.join(output_path, 'Y.csv'))
+    print('done')
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description=__doc__)
@@ -92,11 +91,10 @@ if __name__ == '__main__':
            type=int,
            help='limit dataset size')
     argparser.add_argument(
-           '-b', '--batch_size',
-           metavar='B',
-           default=-1,
-           type=int,
-           help='limit dataset file')
+           '-p', '--pairs',
+           action='store_true',
+           default=False,
+           help='join images into pairs')
 
     args = argparser.parse_args()
     main(args)

@@ -9,20 +9,11 @@ from sklearn.preprocessing import normalize
 import numpy as np
 
 path = '/home/vlad/datasets/{}'.format(sys.argv[2])
-camera_dir = sys.argv[3]
-
-dataset = dataset_loader.Dataset(path, camera_dir, limit=10000).get_dataset()
-
-dataset2 = np.stack(np.array(dataset))
-X = dataset2[:, 0]
-Y = dataset2[:, 2]
-Y = Y.astype(np.float64)
+X, Y = dataset_loader.loadXY(path, 1)
 
 model_name = sys.argv[1]
-
 model = models.ModelFromFile(model_name)
 
 print('loaded from file')
 
-prediction = model.predict_raw(X)
-print('MAE is ', mean_absolute_error(prediction, Y))
+print('MAE is ', model.validate(X, Y))

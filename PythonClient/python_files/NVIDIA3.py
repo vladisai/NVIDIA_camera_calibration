@@ -18,17 +18,6 @@ import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 import os
 
-datasets_root = '/home/vlad/nvidia/datasets'
-
-def loadXY(path, percentage):
-    print('loading ', path)
-    X = np.load(os.path.join(datasets_root, path, 'X.npy'))
-    Y = np.stack(np.load(os.path.join(datasets_root, path, 'Y.npy')))
-    Y = Y[:, [2]]
-    amnt = int(len(X) * percentage)
-    X = X[:amnt]
-    Y = Y[:amnt]
-    return X, Y
 
 def main(args):
     t = time.time()
@@ -39,13 +28,15 @@ def main(args):
     #X = np.load(dataset[:, 0]
     #Y = np.stack(dataset[:, 2]).astype(np.float64)
     datasets = ast.literal_eval(args.datasets)
-    X, Y = loadXY(*datasets[0])
+    columns = ast.literal_eval(args.columns)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, shuffle=False)
-    X_test, X_val, Y_test, Y_val = train_test_split(X, Y, test_size=0.3)
+    X, Y = dataset_loader.loadXY(*datasets[0], columns=columns)
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.5, shuffle=False)
+    X_test, X_val, Y_test, Y_val = train_test_split(X, Y, test_size=0.5)
 
     for dataset in datasets[1:]:
-        X2, Y2 = loadXY(*dataset)
+        X2, Y2 = dataset_loader.loadXY(*dataset)
         X_train = np.concatenate([X_train, X2])
         Y_train = np.concatenate([Y_train, Y2])
 
@@ -89,9 +80,9 @@ def main(args):
     hist = model.fit(X_train, Y_train, batch_size=args.batch_size, epochs=args.epochs, validation_data=(X_val, Y_val))
     #model.train(X_train, Y_train, X_val, Y_val, epochs=args.epochs, batch_size=args.batch_size)
 
-    train_mae = 'Train MAE: {}'.format(model.validate(X_train, Y_train, verbose=False))
-    validation_mae = 'Validation MAE: {}'.format(model.validate(X_val, Y_val, verbose=False))
-    test_mae = 'Test MAE: {}'.format(model.validate(X_test, Y_test, verbose=False))
+    train_mae = 'Train MAE: {}'.format(model.validate(X_train, Y_train, verbose=True))
+    validation_mae = 'Validation MAE: {}'.format(model.validate(X_val, Y_val, verbose=True))
+    test_mae = 'Test MAE: {}'.format(model.validate(X_test, Y_test, verbose=True))
 
     dummy = np.zeros(Y_test.shape)
     dummy.fill(np.mean(Y_test))
@@ -149,6 +140,13 @@ if __name__ == '__main__':
            default=None,
            required=True,
            help='datasets list in format (\'name\', percentage). The first dataset will be validated and tested against.')
+    argparser.add_argument(
+           '-c', '--columns',
+           metavar='COLUMNS',
+           dest='columns',
+           default=None,
+           required=True,
+           help='Columns to predict in Y in format [\'col1\', \'col2\'].')
 
     args = argparser.parse_args()
     main(args)

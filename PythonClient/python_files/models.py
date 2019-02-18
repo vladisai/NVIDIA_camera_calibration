@@ -214,6 +214,7 @@ class ModelFromFile(ModelBase):
         model = model_from_json(loaded_model_json)
         try:
             model.load_weights("{}.h5".format(self.filename))
+            print('loaded file weights')
         except:
             model.compile(loss='mae', optimizer='adam', metrics=['mae'])
         return model
