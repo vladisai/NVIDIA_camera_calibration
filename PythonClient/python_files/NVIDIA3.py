@@ -31,9 +31,9 @@ def main(args):
     columns = ast.literal_eval(args.columns)
 
     ds_path = os.path.join(args.datasets_root, datasets[0][0])
-    gen_train = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=0, read_length=80)
-    gen_val = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=80, read_length=10)
-    gen_test = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=90, read_length=10)
+    gen_train = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=0, read_length=8)
+    gen_val = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=8, read_length=1)
+    gen_test = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=9, read_length=1)
 
     # X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns)
 
