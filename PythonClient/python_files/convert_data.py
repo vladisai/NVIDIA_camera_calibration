@@ -10,10 +10,10 @@ import pandas as pd
 
 def main(args):
     t = time.time()
-    path = '/home/vlad/datasets/{}'.format(args.input)
+    path = args.input
     camera_dir = args.sensor
 
-    output_path = '/home/vlad/datasets/{}'.format(args.output)
+    output_path = args.output
     input_shape = (args.width, args.height, args.channels)
 
     dataset = dataset_loader.Dataset(path, camera_dir, limit=args.dataset_limit, pairs=args.pairs).get_dataset()
@@ -34,13 +34,29 @@ def main(args):
     except:
         pass
 
-    np.save(os.path.join(output_path, 'Y'), Y)
-    np.save(os.path.join(output_path, 'X'), X)
-    #pdx = pd.DataFrame(data=X)
-    pdy = pd.DataFrame(data=Y, 
-            columns=['roll', 'pitch', 'yaw', 'speed', 'steer', 'throttle', 'brake']
-            )
-    pdy.to_csv(os.path.join(output_path, 'Y.csv'))
+    if args.split:
+        rows_per_partition = len(X) // args.split
+        remainder = len(X) % args.split
+        index = 0
+
+        for i in range(0, args.split):
+            current = rows_per_partition
+            if remainder > 0:
+                current += 1
+                remainder -= 1
+            np.save(os.path.join(output_path, 'X_{}'.format(i)), X[i:(i+current)])
+            pdy = pd.DataFrame(data=Y[i:i+current], 
+                    columns=['roll', 'pitch', 'yaw', 'speed', 'steer', 'throttle', 'brake']
+                    )
+            pdy.to_csv(os.path.join(output_path, 'Y_{}.csv'.format(i)))
+    else:
+        #np.save(os.path.join(output_path, 'Y'), Y)
+        np.save(os.path.join(output_path, 'X'), X)
+        pdy = pd.DataFrame(data=Y, 
+                columns=['roll', 'pitch', 'yaw', 'speed', 'steer', 'throttle', 'brake']
+                )
+        pdy.to_csv(os.path.join(output_path, 'Y.csv'))
+
     print('done')
 
 if __name__ == '__main__':
@@ -95,6 +111,12 @@ if __name__ == '__main__':
            action='store_true',
            default=False,
            help='join images into pairs')
-
+    argparser.add_argument(
+            '--split',
+            metavar='SPLIT',
+            default=None,
+            type=int,
+            help='split into multiple files'
+    )
     args = argparser.parse_args()
     main(args)

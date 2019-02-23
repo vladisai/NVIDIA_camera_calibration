@@ -1,44 +1,45 @@
 import numpy as np
 import keras
 import dataset_loader
+import os
+import pandas as pd
 
-class SingleDsDataGenerator(keras.utils.Sequence):
-    'Generates data for Keras'
-    def __init__(self, path, batch_size, columns):
-        'Initialization'
+class DataGenerator(keras.utils.Sequence):
+    def __init__(self, path, batch_size, columns, seek=0, read_length=10):
         self.path = path 
         self.files_count = 0
         self.batch_size = batch_size
-        self.seek = 0
-        self.read_length = 0
+        self.seek = seek 
+        self.read_length = read_length
         self.columns = columns
         self.in_file_index = 0
         self.__preprocess()
         self.on_epoch_end()
 
     def __len__(self):
-        return int(np.floor(len(self.total_length) / self.batch_size))
+        return int(np.floor(self.total_length / self.batch_size))
 
     def __getitem__(self, index):
         # Generate indexes of the batch
-        if self.current_X = None:
+        if self.current_X is None or self.in_file_index == len(self.current_X):
             self.__read_files(self.file_index)
 
         X, Y = self.__get_rows(self.batch_size)
         while len(Y) < self.batch_size:
             if self.in_file_index == len(self.current_X):
                 self.file_index += 1
-                self.file_index %= self.files_count
+                if self.file_index == self.seek + self.read_length:
+                    self.on_epoch_end()
+                    break
                 self.__read_files(self.file_index)
             X_c, Y_c = self.__get_rows(self.batch_size - len(X))
-            X = np.concatenate(X, X_c)
-            Y = np.concatenate(Y, Y_c)
+            X = np.append(X, X_c, 0)
+            Y = np.append(Y, Y_c, 0)
 
         return X, Y
 
     def on_epoch_end(self):
-        'Updates indexes after each epoch'
-        self.file_index = 0
+        self.file_index = self.seek 
         self.current_X = None
         self.current_Y = None
 
@@ -47,15 +48,16 @@ class SingleDsDataGenerator(keras.utils.Sequence):
 
     def __preprocess(self):
         files = os.listdir(self.path)
-        self.files_count = len(files) / 2
+        self.files_count = len(files) // 2
         self.total_length = 0
-        for i in range(self.files_count):
+
+        for i in range(self.seek, self.seek + self.read_length):
             _, y = self.__get_xy_names(i)
             Y = pd.read_csv(y)
             self.total_length += len(Y)
+        print('total length is ', self.total_length)
 
     def __read_files(self, index):
-        # TODO: check if this works
         self.current_X, self.current_Y = dataset_loader.loadXY('', self.path, 1, self.columns, index)
         self.in_file_index = 0
 

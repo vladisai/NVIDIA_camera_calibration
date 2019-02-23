@@ -17,8 +17,7 @@ measurements_dir = 'measurements'
 def loadXY(datasets_root, path, percentage, columns, index=None):
     X_name, Y_name = "X.npy", "Y.csv"
     if index is not None:
-        X_name, Y_name = "X_{}.npy", "Y_{}.csv"
-    print('loading ', path)
+        X_name, Y_name = "X_{}.npy".format(index), "Y_{}.csv".format(index)
     X = np.load(os.path.join(datasets_root, path, X_name))
     #Y = np.stack(np.load(os.path.join(datasets_root, path, 'Y.npy')))
     Y = pd.read_csv(os.path.join(datasets_root, path, Y_name), usecols=columns)

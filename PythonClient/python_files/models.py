@@ -27,6 +27,12 @@ class ModelBase(ABC):
     def fit(self, *args, **kwargs):
         return self.model.fit(*args, **kwargs)
 
+    def fit_generator(self, *args, **kwargs):
+        return self.model.fit_generator(*args, **kwargs)
+
+    def evaluate_generator(self, *args, **kwargs):
+        return self.model.evaluate_generator(*args, **kwargs)
+
     def train(self, X, Y, X_val = None, Y_val = None, epochs = 1, batch_size = 64):
         t = time.time()
         for j in range(0, epochs):

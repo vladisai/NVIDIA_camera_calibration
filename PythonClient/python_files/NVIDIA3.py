@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import dataset_loader
+import dataset_generator
 import models
 import numpy as np
 import sys
@@ -29,17 +30,22 @@ def main(args):
     datasets = ast.literal_eval(args.datasets)
     columns = ast.literal_eval(args.columns)
 
-    X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns)
+    ds_path = os.path.join(args.datasets_root, datasets[0][0])
+    gen_train = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=0, read_length=80)
+    gen_val = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=80, read_length=10)
+    gen_test = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=90, read_length=10)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.5, shuffle=False)
-    X_test, X_val, Y_test, Y_val = train_test_split(X, Y, test_size=0.5)
+    # X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns)
 
-    for dataset in datasets[1:]:
-        X2, Y2 = dataset_loader.loadXY(args.datasets_root, *dataset, columns=columns)
-        X_train = np.concatenate([X_train, X2])
-        Y_train = np.concatenate([Y_train, Y2])
+    # X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.5, shuffle=False)
+    # X_test, X_val, Y_test, Y_val = train_test_split(X, Y, test_size=0.5)
 
-    X_train, Y_train = sklearn.utils.shuffle(X_train, Y_train)
+    # for dataset in datasets[1:]:
+    #     X2, Y2 = dataset_loader.loadXY(args.datasets_root, *dataset, columns=columns)
+    #     X_train = np.concatenate([X_train, X2])
+    #     Y_train = np.concatenate([Y_train, Y2])
+
+    # X_train, Y_train = sklearn.utils.shuffle(X_train, Y_train)
 
 #    print(len(X))
 #    inds = np.abs(Y[:, 0]) < 15
@@ -47,6 +53,7 @@ def main(args):
 #    Y = Y[inds, 1]
 #    print(len(X))
 
+    X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns, index=0)
     input_shape = X[0].shape
     print('input shape is ', input_shape)
     if type(Y[0]) == np.float64:
@@ -54,7 +61,6 @@ def main(args):
     else:
         output_len = len(Y[0])
     print('output len is', output_len)
-
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
@@ -76,17 +82,14 @@ def main(args):
     else:
         model = models.ModelFromFile(args.model)
 
-    hist = model.fit(X_train, Y_train, batch_size=args.batch_size, epochs=args.epochs, validation_data=(X_val, Y_val))
+    #hist = model.fit(X_train, Y_train, batch_size=args.batch_size, epochs=args.epochs, validation_data=(X_val, Y_val))
     #model.train(X_train, Y_train, X_val, Y_val, epochs=args.epochs, batch_size=args.batch_size)
+    hist = model.fit_generator(gen_train, epochs=args.epochs, validation_data=gen_val)
 
-    train_mae = 'Train MAE: {}'.format(model.validate(X_train, Y_train, verbose=True))
-    validation_mae = 'Validation MAE: {}'.format(model.validate(X_val, Y_val, verbose=True))
-    test_mae = 'Test MAE: {}'.format(model.validate(X_test, Y_test, verbose=True))
-
-    dummy = np.zeros(Y_test.shape)
-    dummy.fill(np.mean(Y_test))
-    dummy_mae = 'Dummy MAE: {}'.format(mean_absolute_error(dummy , Y_test))
-    total_time = 'total time {}s'.format(time.time() - t)
+    train_mae = 'Train MAE: {}'.format(model.evaluate_generator(gen_train))
+    validation_mae = 'Validation MAE: {}'.format(model.evaluate_generator(gen_val))
+    test_mae = 'Test MAE: {}'.format(model.evaluate_generator(gen_test))
+    total_time = time.time() - t
 
     if args.save_to:
         model.save(args.save_to)
@@ -103,7 +106,6 @@ def main(args):
     print(train_mae)
     print(validation_mae)
     print(test_mae)
-    print(dummy_mae)
     print(total_time)
 
 if __name__ == '__main__':
