@@ -56,10 +56,7 @@ def main(args):
     X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns, index=0)
     input_shape = X[0].shape
     print('input shape is ', input_shape)
-    if type(Y[0]) == np.float64:
-        output_len = 1
-    else:
-        output_len = len(Y[0])
+    output_len = len(columns)
     print('output len is', output_len)
 
     config = tf.ConfigProto()

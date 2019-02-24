@@ -153,7 +153,7 @@ class ModelSimple(ModelBase):
     def build_model(self):
 
         img = Input(shape=self.input_shape)
-        meta = Input(shape=(1,))
+        meta = Input(shape=(2,))
 
         l = Conv2D(24, kernel_size=(3, 3),
                          activation='relu',

@@ -34,10 +34,15 @@ class DataGenerator(keras.utils.Sequence):
                 self.__read_files(self.file_index)
             X_c, Y_c = self.__get_rows(self.batch_size - len(X))
             X = np.append(X, X_c, 0)
-            Y = np.append(Y, Y_c, 0)
+            Y = Y.append(Y_c)
 
-        v = (Y > 0).astype(np.float64)
-        X = [X, v]
+        sign = (Y.loc[:, "steer"].values > 0).astype(np.float64)
+        sign = sign[:, np.newaxis]
+        speed = (Y.loc[:, "speed"].values).astype(np.float64)
+        speed = speed[:, np.newaxis]
+        meta = np.concatenate([sign, speed], axis=1)
+        X = [X, meta]
+        Y = Y[self.columns].values
         return X, Y
 
     def on_epoch_end(self):
@@ -60,7 +65,7 @@ class DataGenerator(keras.utils.Sequence):
         print('total length is ', self.total_length)
 
     def __read_files(self, index):
-        self.current_X, self.current_Y = dataset_loader.loadXY('', self.path, 1, self.columns, index)
+        self.current_X, self.current_Y = dataset_loader.loadXY('', self.path, 1, index=index)
         self.in_file_index = 0
 
     def __get_rows(self, k):
