@@ -2,9 +2,9 @@ import dataset_loader
 
 import keras
 from keras import optimizers
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.models import model_from_json
-from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Dense, Dropout, Flatten, Activation, Concatenate, Input
 from keras.layers import Conv2D, MaxPooling2D
 
 from abc import ABC, abstractmethod
@@ -85,16 +85,23 @@ class ModelBase(ABC):
 class ModelSimple3(ModelBase):
     def build_model(self):
         model = Sequential()
-        model.add(Conv2D(24, kernel_size=(3, 3),
+
+        convnet = Sequential()
+        convnet.add(Conv2D(24, kernel_size=(3, 3),
                          activation='relu',
                          input_shape=self.input_shape,
                          data_format="channels_last"))
-        model.add(Conv2D(48, (3, 3), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Conv2D(64, (5, 5), activation='relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
-        model.add(Flatten())
+        convnet.add(Conv2D(48, (3, 3), activation='relu'))
+        convnet.add(MaxPooling2D(pool_size=(2, 2)))
+        convnet.add(Conv2D(64, (5, 5), activation='relu'))
+        convnet.add(MaxPooling2D(pool_size=(2, 2)))
+        convnet.add(Dropout(0.25))
+        convnet.add(Flatten())
+
+        extra = Sequential()
+        extra.add(Activation('linear', input_shape=(1)))
+
+        model.add(Merge([convnet, extra], mode='concat', concat_axis=2))
         model.add(Dense(128, activation='relu'))
         model.add(Dropout(0.25))
         model.add(Dense(50, activation='relu'))
@@ -144,15 +151,51 @@ class ModelSimpleMSE(ModelBase):
 
 class ModelSimple(ModelBase):
     def build_model(self):
+
+        img = Input(shape=self.input_shape)
+        meta = Input(shape=(1,))
+
+        l = Conv2D(24, kernel_size=(3, 3),
+                         activation='relu',
+                         data_format="channels_last")(img)
+        l = Conv2D(48, (3, 3), activation='relu')(l)
+        l = MaxPooling2D(pool_size=(2, 2))(l)
+        l = Dropout(0.25)(l)
+        l = Flatten()(l)
+
+        l = keras.layers.concatenate([l, meta], axis=-1)
+
+        l = Dense(128, activation='relu')(l)
+        l = Dropout(0.25)(l)
+        l = Dense(50, activation='relu')(l)
+        l = Dense(self.output_length, activation='linear')(l)
+
+        model = Model(inputs=[img, meta], outputs=l)
+        model.compile(loss='mae', optimizer='adam')
+        return model
+
+class ModelSimple_d(ModelBase):
+    def build_model(self):
+
+        img = Input(shape=self.input_shape)
+        meta = Input(shape=(1,))
+
         model = Sequential()
+        model = Sequential()
+
+        model.add(img)
         model.add(Conv2D(24, kernel_size=(3, 3),
                          activation='relu',
-                         input_shape=self.input_shape,
                          data_format="channels_last"))
         model.add(Conv2D(48, (3, 3), activation='relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
         model.add(Flatten())
+
+        extra = Sequential()
+        extra.add(Activation('linear', input_shape=(1,)))
+
+        model.add(Concatenate([convnet, extra]))
         model.add(Dense(128, activation='relu'))
         model.add(Dropout(0.25))
         model.add(Dense(50, activation='relu'))

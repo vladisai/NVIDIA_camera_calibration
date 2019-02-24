@@ -36,6 +36,8 @@ class DataGenerator(keras.utils.Sequence):
             X = np.append(X, X_c, 0)
             Y = np.append(Y, Y_c, 0)
 
+        v = (Y > 0).astype(np.float64)
+        X = [X, v]
         return X, Y
 
     def on_epoch_end(self):
