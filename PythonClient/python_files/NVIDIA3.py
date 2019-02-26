@@ -97,7 +97,6 @@ def main(args):
             f.write(train_mae + '\n')
             f.write(validation_mae + '\n')
             f.write(test_mae + '\n')
-            f.write(dummy_mae + '\n')
             f.write(total_time + '\n')
 
     print(train_mae)
