@@ -86,7 +86,7 @@ def main(args):
     train_mae = 'Train MAE: {}'.format(model.evaluate_generator(gen_train))
     validation_mae = 'Validation MAE: {}'.format(model.evaluate_generator(gen_val))
     test_mae = 'Test MAE: {}'.format(model.evaluate_generator(gen_test))
-    total_time = time.time() - t
+    total_time = 'Total Time: {}s'.format(time.time() - t)
 
     if args.save_to:
         model.save(args.save_to)
