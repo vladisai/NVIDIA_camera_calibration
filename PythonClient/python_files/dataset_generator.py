@@ -46,7 +46,6 @@ class DataGenerator(keras.utils.Sequence):
         sign = Y.loc[:, "steer"].values
         sign = np.array([foo(xi) for xi in sign]).astype(np.float64)
         sign = sign[:, np.newaxis]
-        print(sign, sign.shape)
 
         speed = (Y.loc[:, "speed"].values).astype(np.float64)
         speed = speed[:, np.newaxis]
