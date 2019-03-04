@@ -36,13 +36,24 @@ class DataGenerator(keras.utils.Sequence):
             X = np.append(X, X_c, 0)
             Y = Y.append(Y_c)
 
-        sign = (Y.loc[:, "steer"].values > 0).astype(np.float64)
+        def foo(x):
+            if x > 0.3:
+                return 1
+            if x < 0.3:
+                return -1
+            return 0
+
+        sign = Y.loc[:, "steer"].values
+        sign = np.array([foo(xi) for xi in sign]).astype(np.float64)
         sign = sign[:, np.newaxis]
+        print(sign, sign.shape)
+
         speed = (Y.loc[:, "speed"].values).astype(np.float64)
         speed = speed[:, np.newaxis]
         meta = np.concatenate([sign, speed], axis=1)
         X = [X, meta]
         Y = Y[self.columns].values
+        print('finished')
         return X, Y
 
     def on_epoch_end(self):

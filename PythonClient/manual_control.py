@@ -78,12 +78,13 @@ def make_carla_settings(args):
     """Make a CarlaSettings object with the settings we need."""
     settings = CarlaSettings()
     settings.set(
+        PlayerVehicle='/Game/Blueprints/Vehicles/AudiTT/AudiTT.AudiTT_C',
         SynchronousMode=False,
         SendNonPlayerAgentsInfo=False,
         NumberOfVehicles=0,
         NumberOfPedestrians=0,
-        WeatherId=random.choice([1, 3, 7, 8, 14]),
-        QualityLevel=args.quality_level)
+        WeatherId=0,
+        QualityLevel='Low')
     settings.randomize_seeds()
     camera0 = sensor.Camera('CameraRGB_inf')
     camera0.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
