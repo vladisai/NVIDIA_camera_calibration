@@ -1,4 +1,7 @@
-from python_files import dataset_loader
+try:
+    from python_files import dataset_loader
+except:
+    import dataset_loader
 
 import keras
 from keras import optimizers
