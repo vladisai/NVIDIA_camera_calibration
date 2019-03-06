@@ -28,11 +28,14 @@ STARTING in a moment...
 
 from __future__ import print_function
 
+from google.protobuf.json_format import MessageToJson
+
 import argparse
 import logging
 import random
 import time
 import numpy as np
+import os
 from python_files.models import ModelFromFile
 
 from PIL import Image
@@ -51,6 +54,7 @@ try:
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_w
+    from pygame.locals import K_i
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -68,8 +72,8 @@ from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
 
 
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
 MINI_WINDOW_WIDTH = 160
 MINI_WINDOW_HEIGHT = 120
 
@@ -79,23 +83,28 @@ def make_carla_settings(args):
     settings = CarlaSettings()
     settings.set(
         PlayerVehicle='/Game/Blueprints/Vehicles/AudiTT/AudiTT.AudiTT_C',
-        SynchronousMode=False,
+        SynchronousMode=True,
         SendNonPlayerAgentsInfo=False,
         NumberOfVehicles=0,
         NumberOfPedestrians=0,
         WeatherId=0,
         QualityLevel='Low')
     settings.randomize_seeds()
-    camera0 = sensor.Camera('CameraRGB_inf')
+    camera_main = sensor.Camera('CameraRGB_main')
+    camera_main.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    camera_main.set_position(-9.0, 0.0, 3.1)
+    camera_main.set_rotation(-10.0, 0.0, 0.0)
+    camera0 = sensor.Camera('CameraRGB_clean')
     camera0.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
     camera0.set_position(2.0, 0.0, 1.1)
     camera0.set_rotation(0.0, 0.0, 0.0)
-    camera1 = sensor.Camera('CameraRGB')
-    camera1.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-    camera1.set_position(-6.0, 0.0, 2.5)
-    camera1.set_rotation(0.0, 0.0, 0.0)
+    # camera1 = sensor.Camera('CameraRGB')
+    # camera1.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    # camera1.set_position(-6.0, 0.0, 2.5)
+    # camera1.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera0)
-    settings.add_sensor(camera1)
+    settings.add_sensor(camera_main)
+    # settings.add_sensor(camera1)
     # camera1 = sensor.Camera('CameraDepth', PostProcessing='Depth')
     # camera1.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
     # camera1.set_position(2.0, 0.0, 1.4)
@@ -145,6 +154,7 @@ class CarlaGame(object):
     def __init__(self, carla_client, args):
         self.client = carla_client
         self._carla_settings = make_carla_settings(args)
+
         self._timer = None
         self._display = None
         self._main_image = None
@@ -162,7 +172,12 @@ class CarlaGame(object):
         self._position = None
         self._agent_positions = None
 
-        self._model = ModelFromFile('simple_dataset4_c_0')
+        #self._model = ModelFromFile('simple_dataset4_c_0')
+        self._model = None
+
+        self._save_images_to_disk = args.save_images_to_disk
+        self._out_filename_format = args.out_filename_format
+        self._episode = 0
 
     def execute(self):
         """Launch the PyGame."""
@@ -192,23 +207,62 @@ class CarlaGame(object):
         self._on_new_episode()
 
     def _on_new_episode(self):
-        self._carla_settings.randomize_seeds()
-        self._carla_settings.randomize_weather()
-        scene = self.client.load_settings(self._carla_settings)
+        settings = self._carla_settings
+        camera1 = sensor.Camera('CameraRGB_pitch')
+        camera1.set_image_size(160, 120)
+        camera1.set_position(2.00, 0.0, 1.10)
+        pitch = random.uniform(-15, 15)
+        camera1.set_rotation(pitch=pitch, yaw=0, roll=0)
+        settings.add_sensor(camera1)
+
+        scene = self.client.load_settings(settings)
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)
         print('Starting new episode...')
         self.client.start_episode(player_start)
         self._timer = Timer()
         self._is_on_reverse = False
+        self._episode += 0
+        self._frame = 0
+
+        if self._save_images_to_disk:
+            conf = self._out_filename_format.format(self._episode, 'configs', 0) + '_config'
+            if not os.path.exists(os.path.dirname(conf)):
+                try:
+                    os.makedirs(os.path.dirname(conf))
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
+            with open(conf, 'w') as f:
+                f.write('pitch={}\n'.format(pitch))
+                f.write('roll={}\n'.format(roll))
+                f.write('yaw={}\n'.format(yaw))
 
     def _on_loop(self):
         self._timer.tick()
+        self._frame += 1
 
         measurements, sensor_data = self.client.read_data()
 
-        self._main_image = sensor_data.get('CameraRGB', None)
-        self._inf_image = sensor_data.get('CameraRGB_inf', None)
+        self._main_image = sensor_data.get('CameraRGB_main', None)
+
+        if self._save_images_to_disk:
+            for name, measurement in sensor_data.items():
+                if name != 'CameraRGB_main':
+                    filename = self._out_filename_format.format(self._episode, name, self._frame)
+                    measurement.save_to_disk(filename)
+
+            filename = self._out_filename_format.format(self._episode, 'measurements', self._frame)
+            if not os.path.exists(os.path.dirname(filename)):
+                try:
+                    os.makedirs(os.path.dirname(filename))
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
+            with open(filename, 'w') as f:
+                f.write(MessageToJson(measurements))
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 1.0:
@@ -287,6 +341,8 @@ class CarlaGame(object):
             self._is_on_reverse = not self._is_on_reverse
         if keys[K_p]:
             self._enable_autopilot = not self._enable_autopilot
+        if keys[K_i]:
+            self._save_images_to_disk = not self._save_images_to_disk
         control.reverse = self._is_on_reverse
         return control
 
@@ -430,7 +486,14 @@ def main():
         default=None,
         help='plot the map of the current city (needs to match active map in '
              'server, options: Town01 or Town02)')
+    argparser.add_argument(
+        '-i', '--images-to-disk',
+        action='store_true',
+        dest='save_images_to_disk',
+        help='save images (and Lidar data if active) to disk')
+
     args = argparser.parse_args()
+    args.out_filename_format = 'out/episode_{:0>4d}/{:s}/{:0>6d}'
 
     log_level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
