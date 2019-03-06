@@ -52,7 +52,6 @@ class DataGenerator(keras.utils.Sequence):
         meta = speed
         X = [X, meta]
         Y = Y[self.columns].values
-        print('finished')
         return X, Y
 
     def on_epoch_end(self):
