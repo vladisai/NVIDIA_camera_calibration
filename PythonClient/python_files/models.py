@@ -1,4 +1,7 @@
-import dataset_loader
+try:
+    from python_files import dataset_loader
+except:
+    import dataset_loader
 
 import keras
 from keras import optimizers
@@ -153,7 +156,7 @@ class ModelSimple(ModelBase):
     def build_model(self):
 
         img = Input(shape=self.input_shape)
-        meta = Input(shape=(2,))
+        meta = Input(shape=(1,))
 
         l = Conv2D(24, kernel_size=(3, 3),
                          activation='relu',

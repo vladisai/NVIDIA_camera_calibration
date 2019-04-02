@@ -54,8 +54,9 @@ def run_carla_client(args):
                 # want for the new episode.
                 settings = CarlaSettings()
                 settings.set(
+                    PlayerVehicle='/Game/Blueprints/Vehicles/AudiTT/AudiTT.AudiTT_C',
                     SynchronousMode=True,
-                    SendNonPlayerAgentsInfo=True,
+                    SendNonPlayerAgentsInfo=False,
                     NumberOfVehicles=0,
                     NumberOfPedestrians=0,
                     WeatherId=0,
@@ -75,6 +76,14 @@ def run_carla_client(args):
                 camera1 = Camera('CameraRGB_clean')
                 camera1.set_image_size(160, 120)
                 camera1.set_position(2.00, 0.0, 1.10)
+
+                camera1_1 = Camera('CameraRGB_clean_shiftp')
+                camera1_1.set_image_size(160, 120)
+                camera1_1.set_position(2.00, 0.3, 1.10)
+
+                camera1_2 = Camera('CameraRGB_clean_shiftn')
+                camera1_2.set_image_size(160, 120)
+                camera1_2.set_position(2.00, -0.3, 1.10)
                  
                 camera2 = Camera('CameraRGB_roll_pitch')
                 camera2.set_image_size(160, 120)
@@ -88,6 +97,8 @@ def run_carla_client(args):
 
                 settings.add_sensor(camera0)
                 settings.add_sensor(camera1)
+                settings.add_sensor(camera1_1)
+                settings.add_sensor(camera1_2)
                 settings.add_sensor(camera2)
                 settings.add_sensor(camera3)
 

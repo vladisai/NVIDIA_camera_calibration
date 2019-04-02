@@ -57,7 +57,7 @@ class DataGenerator(keras.utils.Sequence):
 
         speed = (Y.loc[:, "speed"].values).astype(np.float64)
         speed = speed[:, np.newaxis]
-        meta = np.concatenate([sign, speed], axis=1)
+        meta = speed
         X = [X, meta]
         Y = Y[self.columns].values
         return X, Y
