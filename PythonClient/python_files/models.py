@@ -7,7 +7,7 @@ import keras
 from keras import optimizers
 from keras.models import Sequential, Model
 from keras.models import model_from_json
-from keras.layers import Dense, Dropout, Flatten, Activation, Concatenate, Input
+from keras.layers import Dense, Dropout, Flatten, Activation, Concatenate, Input, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D
 
 from abc import ABC, abstractmethod
@@ -161,16 +161,18 @@ class ModelSimple(ModelBase):
         l = Conv2D(24, kernel_size=(3, 3),
                          activation='relu',
                          data_format="channels_last")(img)
+        l = BatchNormalization()(l)
         l = Conv2D(48, (3, 3), activation='relu')(l)
+        l = BatchNormalization()(l)
         l = MaxPooling2D(pool_size=(2, 2))(l)
-        l = Dropout(0.25)(l)
         l = Flatten()(l)
 
         l = keras.layers.concatenate([l, meta], axis=-1)
 
         l = Dense(128, activation='relu')(l)
-        l = Dropout(0.25)(l)
+        l = BatchNormalization()(l)
         l = Dense(50, activation='relu')(l)
+        l = BatchNormalization()(l)
         l = Dense(self.output_length, activation='linear')(l)
 
         model = Model(inputs=[img, meta], outputs=l)
@@ -260,15 +262,20 @@ class ModelNVIDIA(ModelBase):
         l = Conv2D(24, kernel_size=(5, 5),
                          activation='relu',
                          data_format="channels_last")(img)
+        l = BatchNormalization()(l)
         l = Conv2D(36, kernel_size=(5, 5), strides=(2, 2), activation='relu')(l)
+        l = BatchNormalization()(l)
         l = Conv2D(48, kernel_size=(5, 5), strides=(2, 2), activation='relu')(l)
+        l = BatchNormalization()(l)
         l = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(l)
+        l = BatchNormalization()(l)
         l = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(l)
         l = Flatten()(l)
 
         l = keras.layers.concatenate([l, meta], axis=-1)
 
         l = Dense(100, activation='relu')(l)
+        l = BatchNormalization()(l)
         l = Dense(10, activation='relu')(l)
         l = Dense(self.output_length, activation='linear')(l)
 
