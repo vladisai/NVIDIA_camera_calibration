@@ -115,7 +115,6 @@ class Dataset:
         return self.dataset
 
     def add_episode(self, episode_path, camera_dir, pairs=False):
-        print('processing {}'.format(episode_path))
         result = []
         episode_images_dir = os.path.join(episode_path, camera_dir)
         episode_measurements_dir = os.path.join(episode_path, measurements_dir)
