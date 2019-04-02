@@ -31,7 +31,7 @@ def main(args):
     columns = ast.literal_eval(args.columns)
 
     ds_path = os.path.join(args.datasets_root, datasets[0][0])
-    gen_train = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=0, read_length=8)
+    gen_train = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=0, read_length=8, augment=True)
     gen_val = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=8, read_length=1)
     gen_test = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=9, read_length=1)
 
@@ -53,7 +53,7 @@ def main(args):
 #    Y = Y[inds, 1]
 #    print(len(X))
 
-    X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns, index=0)
+    X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns, suffix=0)
     input_shape = X[0].shape
     print('input shape is ', input_shape)
     output_len = len(columns)

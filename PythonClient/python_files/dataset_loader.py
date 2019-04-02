@@ -14,13 +14,13 @@ from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_a
 config_path = 'configs/000000_config'
 measurements_dir = 'measurements'
 
-def loadXY(datasets_root, path, percentage, columns=None, index=None):
+def loadXY(datasets_root, path, percentage, columns=None, suffix=None):
     X_name, Y_name = "X.npy", "Y.csv"
-    if index is not None:
-        X_name, Y_name = "X_{}.npy".format(index), "Y_{}.csv".format(index)
+    if suffix is not None:
+        X_name, Y_name = "X_{}.npy".format(suffix), "Y_{}.csv".format(suffix)
     X = np.load(os.path.join(datasets_root, path, X_name))
     #Y = np.stack(np.load(os.path.join(datasets_root, path, 'Y.npy')))
-    Y = pd.read_csv(os.path.join(datasets_root, path, Y_name))
+    Y = pd.read_csv(os.path.join(datasets_root, path, Y_name), index_col=0)
     amnt = int(len(X) * percentage)
     X = X[:amnt]
     Y = Y[:amnt]

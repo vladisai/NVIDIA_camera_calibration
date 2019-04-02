@@ -40,15 +40,16 @@ def main(args):
         index = 0
 
         for i in range(0, args.split):
-            current = rows_per_partition
+            current = index + rows_per_partition
             if remainder > 0:
                 current += 1
                 remainder -= 1
-            np.save(os.path.join(output_path, 'X_{}'.format(i)), X[i:(i+current)])
-            pdy = pd.DataFrame(data=Y[i:i+current], 
+            np.save(os.path.join(output_path, 'X_{}'.format(i)), X[index:current])
+            pdy = pd.DataFrame(data=Y[index:current], 
                     columns=['roll', 'pitch', 'yaw', 'speed', 'steer', 'throttle', 'brake']
                     )
             pdy.to_csv(os.path.join(output_path, 'Y_{}.csv'.format(i)))
+            index = current
     else:
         #np.save(os.path.join(output_path, 'Y'), Y)
         np.save(os.path.join(output_path, 'X'), X)
