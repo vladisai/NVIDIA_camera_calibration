@@ -172,8 +172,11 @@ class CarlaGame(object):
         self._position = None
         self._agent_positions = None
 
-        #self._model = ModelFromFile('simple_dataset4_c_0')
-        self._model = None
+        if args.model != None:
+            self._model = ModelFromFile(args.model)
+            self._enable_autopilot = True
+        else:
+            self._model = None
 
         self._save_images_to_disk = args.save_images_to_disk
         self._out_filename_format = args.out_filename_format
@@ -246,6 +249,7 @@ class CarlaGame(object):
         measurements, sensor_data = self.client.read_data()
 
         self._main_image = sensor_data.get('CameraRGB_main', None)
+        self._inf_image = sensor_data.get('CameraRGB_clean', None)
 
         if self._save_images_to_disk:
             for name, measurement in sensor_data.items():
@@ -302,20 +306,20 @@ class CarlaGame(object):
             self._on_new_episode()
         elif self._enable_autopilot:
             prediction = 0
-            if self._inf_image is not None:
+            autopilot_control = measurements.player_measurements.autopilot_control
+            if self._model is not None:
                 array = image_converter.to_rgb_array(self._inf_image)
                 npa = np.array(array)
                 img = Image.fromarray(array).convert('L')
                 npa = np.asarray(img)
                 npa = npa.astype(np.float64) / 255
                 npa = np.expand_dims(npa, axis = 3)
-                prediction = self._model.predict(np.expand_dims(npa, axis = 0))[0]
+                meta = np.array([measurements.player_measurements.forward_speed])[:, np.newaxis]
+                image = np.expand_dims(npa, axis = 0)
+                inputs = [image, meta]
+                autopilot_control.steer = self._model.predict(inputs)[0]
             
-            my_controls = VehicleControl()
-            my_controls.steer = prediction 
-            my_controls.throttle = 0.5
-            #self.client.send_control(measurements.player_measurements.autopilot_control)
-            self.client.send_control(my_controls)
+            self.client.send_control(autopilot_control)
         else:
             self.client.send_control(control)
 
@@ -491,6 +495,11 @@ def main():
         action='store_true',
         dest='save_images_to_disk',
         help='save images (and Lidar data if active) to disk')
+    argparser.add_argument(
+        '--model',
+        dest='model',
+        default=None,
+        help='model name to load')
 
     args = argparser.parse_args()
     args.out_filename_format = 'out/episode_{:0>4d}/{:s}/{:0>6d}'

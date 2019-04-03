@@ -36,6 +36,9 @@ class ModelBase(ABC):
     def evaluate_generator(self, *args, **kwargs):
         return self.model.evaluate_generator(*args, **kwargs)
 
+    def predict(self, *args, **kwargs):
+        return self.model.predict(*args, **kwargs)
+
     def train(self, X, Y, X_val = None, Y_val = None, epochs = 1, batch_size = 64):
         t = time.time()
         for j in range(0, epochs):
@@ -62,9 +65,6 @@ class ModelBase(ABC):
             if verbose: 
                 print('{} images, eta is  {} s'.format(i, (time.time() - t) / (i + 1) * (len(X) - i - 1)))
         return Y
-
-    def predict(self, X):
-        return self.model.predict(X)
 
     def validate(self, X, Y, verbose=False):
         pred = self.predict(X)

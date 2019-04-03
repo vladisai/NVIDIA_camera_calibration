@@ -85,7 +85,7 @@ def main(args):
 
     print('fitted')
 
-    train_mae = 'Train MAE: {}'.format(model.evaluate_generator(gen_train))
+    #train_mae = 'Train MAE: {}'.format(model.evaluate_generator(gen_train))
     validation_mae = 'Validation MAE: {}'.format(model.evaluate_generator(gen_val))
     test_mae = 'Test MAE: {}'.format(model.evaluate_generator(gen_test))
     total_time = 'Total Time: {}s'.format(time.time() - t)
