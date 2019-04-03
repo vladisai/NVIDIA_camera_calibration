@@ -66,6 +66,7 @@ class DataGenerator(keras.utils.Sequence):
         self.file_index = self.seek 
         self.current_X = None
         self.current_Y = None
+        print('on epoch end')
 
     def __get_xy_names(self, i):
         return os.path.join(self.path, 'X_{}.npy'.format(i)), os.path.join(self.path, 'Y_{}.csv'.format(i))
@@ -131,11 +132,11 @@ def shift(xa, t):
 def random_augmentation(x, y):
     steer_diff = 0
     if random.random() < 0.5:
-        shift_x = random.randint(-40, 40)
+        shift_x = random.randint(-30, 30)
         steer_diff = shift_x / 40 * 0.3
         x = shift(x, shift_x)
     else:
-        shear_x = random.randint(-40, 40)
+        shear_x = random.randint(-30, 30)
         steer_diff = shear_x / 40 * 0.5
         x = shear(x, shear_x)
     x = crop(x)

@@ -83,6 +83,8 @@ def main(args):
     #model.train(X_train, Y_train, X_val, Y_val, epochs=args.epochs, batch_size=args.batch_size)
     hist = model.fit_generator(gen_train, epochs=args.epochs, validation_data=gen_val)
 
+    print('fitted')
+
     train_mae = 'Train MAE: {}'.format(model.evaluate_generator(gen_train))
     validation_mae = 'Validation MAE: {}'.format(model.evaluate_generator(gen_val))
     test_mae = 'Test MAE: {}'.format(model.evaluate_generator(gen_test))
