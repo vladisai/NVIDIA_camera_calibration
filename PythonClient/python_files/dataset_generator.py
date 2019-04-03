@@ -132,9 +132,9 @@ def shift(xa, t):
 def random_augmentation(x, y):
     steer_diff = 0
     if random.random() < 0.5:
-        shift_range = 30
+        shift_range = 50
         shift_x = random.randint(-shift_range, shift_range)
-        steer_diff = shift_x / shift_range * 0.3
+        steer_diff = shift_x / shift_range * 0.5
         x = shift(x, shift_x)
     else:
         shear_range = 30
