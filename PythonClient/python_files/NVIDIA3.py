@@ -96,12 +96,10 @@ def main(args):
             f.write(args.model + '\n')
             f.write(str(sys.argv) + '\n')
             f.write(str(hist.history) + '\n')
-            f.write(train_mae + '\n')
             f.write(validation_mae + '\n')
             f.write(test_mae + '\n')
             f.write(total_time + '\n')
 
-    print(train_mae)
     print(validation_mae)
     print(test_mae)
     print(total_time)
