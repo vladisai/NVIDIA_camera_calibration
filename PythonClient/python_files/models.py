@@ -167,7 +167,7 @@ class ModelSimple(ModelBase):
         l = MaxPooling2D(pool_size=(2, 2))(l)
         l = Flatten()(l)
 
-        l = keras.layers.concatenate([l, meta], axis=-1)
+        #l = keras.layers.concatenate([l, meta], axis=-1)
 
         l = Dense(128, activation='relu')(l)
         l = BatchNormalization()(l)
@@ -257,7 +257,7 @@ class ModelNVIDIA(ModelBase):
         # return model
 
         img = Input(shape=self.input_shape)
-        meta = Input(shape=(2,))
+        meta = Input(shape=(1,))
 
         l = Conv2D(24, kernel_size=(5, 5),
                          activation='relu',
@@ -272,7 +272,7 @@ class ModelNVIDIA(ModelBase):
         l = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(l)
         l = Flatten()(l)
 
-        l = keras.layers.concatenate([l, meta], axis=-1)
+        #l = keras.layers.concatenate([l, meta], axis=-1)
 
         l = Dense(100, activation='relu')(l)
         l = BatchNormalization()(l)
