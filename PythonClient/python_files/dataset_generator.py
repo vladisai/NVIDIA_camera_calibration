@@ -20,7 +20,7 @@ class DataGenerator(keras.utils.Sequence):
         self.__preprocess()
         self.on_epoch_end()
         if augment:
-            self.AUGMENTATIONS_PER_IMAGE = 1
+            self.AUGMENTATIONS_PER_IMAGE = 2
         else:
             self.AUGMENTATIONS_PER_IMAGE = 0
 

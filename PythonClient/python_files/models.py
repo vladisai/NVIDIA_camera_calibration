@@ -161,18 +161,14 @@ class ModelSimple(ModelBase):
         l = Conv2D(24, kernel_size=(3, 3),
                          activation='relu',
                          data_format="channels_last")(img)
-        l = BatchNormalization(momentum=0.01)(l)
         l = Conv2D(48, (3, 3), activation='relu')(l)
         l = MaxPooling2D(pool_size=(2, 2))(l)
         l = Flatten()(l)
-        l = BatchNormalization(momentum=0.01)(l)
 
         #l = keras.layers.concatenate([l, meta], axis=-1)
 
         l = Dense(128, activation='relu')(l)
-        l = BatchNormalization(momentum=0.01)(l)
         l = Dense(50, activation='relu')(l)
-        l = BatchNormalization(momentum=0.01)(l)
         l = Dense(self.output_length, activation='linear')(l)
 
         model = Model(inputs=[img, meta], outputs=l)
