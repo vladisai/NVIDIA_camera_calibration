@@ -258,15 +258,21 @@ class ModelNVIDIA(ModelBase):
         l = Conv2D(24, kernel_size=(5, 5),
                          activation='relu',
                          data_format="channels_last")(img)
+        l = BatchNormalization(momentum=0.01)(l)
         l = Conv2D(36, kernel_size=(5, 5), strides=(2, 2), activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
         l = Conv2D(48, kernel_size=(5, 5), strides=(2, 2), activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
         l = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
         l = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(l)
         l = Flatten()(l)
+        l = BatchNormalization(momentum=0.01)(l)
 
         #l = keras.layers.concatenate([l, meta], axis=-1)
 
         l = Dense(100, activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
         l = Dense(10, activation='relu')(l)
         l = Dense(self.output_length, activation='linear')(l)
 
