@@ -99,7 +99,7 @@ def main(args):
             f.write(validation_mae + '\n')
             f.write(test_mae + '\n')
             f.write(total_time + '\n')
-            commit = os.system('git log -n 1')
+            commit = os.popen('git log -n 1').read()
             f.write(commit)
 
     print(validation_mae)
