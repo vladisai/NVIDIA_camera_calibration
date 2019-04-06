@@ -277,7 +277,7 @@ class ModelNVIDIA(ModelBase):
         l = Dense(self.output_length, activation='linear')(l)
 
         model = Model(inputs=[img, meta], outputs=l)
-        model.compile(loss='mae', optimizer='adam')
+        model.compile(loss='mse', optimizer='adam')
         return model
 
 class ModelFromFile(ModelBase):

@@ -39,11 +39,12 @@ def read_image(image_path, shape=(160, 120, 1)):
     img = load_img(image_path)
     if c == 1:
         img = img.convert('L')
+    else:
+        img_yuv = img.convert('YCbCr')
     if img.width != w or img.height != h:
         raise Exception('should be same size')
         #img = img.resize((w, h),PIL.Image.ANTIALIAS)
     x = img_to_array(img)
-    x /= 255
     return x
 
 def transform_batch(X, shape):
