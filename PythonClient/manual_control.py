@@ -317,7 +317,8 @@ class CarlaGame(object):
                 meta = np.array([measurements.player_measurements.forward_speed])[:, np.newaxis]
                 image = np.expand_dims(npa, axis = 0)
                 inputs = [image]
-                autopilot_control.steer = self._model.predict(inputs)[0]
+                autopilot_control.steer = self._model.predict(inputs)[0][0]
+                autopilot_control.throttle = self._model.predict(inputs)[0][1]
             
             self.client.send_control(autopilot_control)
         else:

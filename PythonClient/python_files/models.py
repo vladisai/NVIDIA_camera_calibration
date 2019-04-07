@@ -223,41 +223,15 @@ class ModelSimple_good(ModelBase):
         model.compile(loss='mae', optimizer='adam', metrics=['mae'])
         return model
 
-class ModelNVIDIA(ModelBase):
+class ModelNVIDIA_MSE(ModelBase):
     def build_model(self):
-        print('NVIDIA model used')
-        # model = Sequential()
-        # model.add(Conv2D(24, kernel_size=(5, 5),
-        #                  strides=(2, 2),
-        #                  activation='relu',
-        #                  input_shape=self.input_shape,
-        #                  data_format="channels_last"))
-        # model.add(Conv2D(36, kernel_size=(5, 5),
-        #                  strides=(2, 2),
-        #                  activation='relu'))
-        # model.add(Conv2D(48, kernel_size=(5, 5),
-        #                  strides=(2, 2),
-        #                  activation='relu'))
-        # model.add(Conv2D(64, kernel_size=(3, 3),
-        #                  strides=(1, 1),
-        #                  activation='relu'))
-        # model.add(Conv2D(64, kernel_size=(3, 3),
-        #                  strides=(1, 1),
-        #                  activation='relu'))
-        # model.add(Flatten())
-        # model.add(Dense(100, activation='relu'))
-        # model.add(Dense(10, activation='relu'))
-        # model.add(Dense(self.output_length, activation='linear'))
-
-        # model.compile(loss='mae', optimizer='adam', metrics=['mae'])
-        # return model
-
         img = Input(shape=self.input_shape)
         meta = Input(shape=(1,))
 
+        l = BatchNormalization(momentum=0.01)(img)
         l = Conv2D(24, kernel_size=(5, 5),
                          activation='relu',
-                         data_format="channels_last")(img)
+                         data_format="channels_last")(l)
         l = BatchNormalization(momentum=0.01)(l)
         l = Conv2D(36, kernel_size=(5, 5), strides=(2, 2), activation='relu')(l)
         l = BatchNormalization(momentum=0.01)(l)
@@ -278,6 +252,37 @@ class ModelNVIDIA(ModelBase):
 
         model = Model(inputs=[img, meta], outputs=l)
         model.compile(loss='mse', optimizer='adam')
+        return model
+
+class ModelNVIDIA_MAE(ModelBase):
+    def build_model(self):
+        img = Input(shape=self.input_shape)
+        meta = Input(shape=(1,))
+
+        l = BatchNormalization(momentum=0.01)(img)
+        l = Conv2D(24, kernel_size=(5, 5),
+                         activation='relu',
+                         data_format="channels_last")(l)
+        l = BatchNormalization(momentum=0.01)(l)
+        l = Conv2D(36, kernel_size=(5, 5), strides=(2, 2), activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
+        l = Conv2D(48, kernel_size=(5, 5), strides=(2, 2), activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
+        l = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
+        l = Conv2D(64, kernel_size=(3, 3), strides=(1, 1), activation='relu')(l)
+        l = Flatten()(l)
+        l = BatchNormalization(momentum=0.01)(l)
+
+        #l = keras.layers.concatenate([l, meta], axis=-1)
+
+        l = Dense(100, activation='relu')(l)
+        l = BatchNormalization(momentum=0.01)(l)
+        l = Dense(10, activation='relu')(l)
+        l = Dense(self.output_length, activation='linear')(l)
+
+        model = Model(inputs=[img, meta], outputs=l)
+        model.compile(loss='mae', optimizer='adam')
         return model
 
 class ModelFromFile(ModelBase):

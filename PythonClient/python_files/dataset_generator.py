@@ -8,7 +8,7 @@ import random
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img, apply_affine_transform
 
 class DataGenerator(keras.utils.Sequence):
-    def __init__(self, path, batch_size, columns, seek=0, read_length=10, augment=False):
+    def __init__(self, path, batch_size, columns, seek=0, read_length=10, augment=0):
         self.path = path 
         self.files_count = 0
         self.batch_size = batch_size
@@ -20,7 +20,7 @@ class DataGenerator(keras.utils.Sequence):
         self.__preprocess()
         self.on_epoch_end()
         if augment:
-            self.AUGMENTATIONS_PER_IMAGE = 2
+            self.AUGMENTATIONS_PER_IMAGE = augment
         else:
             self.AUGMENTATIONS_PER_IMAGE = 0
 

@@ -10,48 +10,20 @@ import argparse
 import time
 import ast
 
-import sklearn
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error
-from sklearn.preprocessing import normalize
-
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 import os
 
 def main(args):
     t = time.time()
-    #camera_dir = args.sensor
 
-    #dataset = dataset_loader.Dataset(path, camera_dir, limit=args.dataset_limit).get_dataset()
-
-    #X = np.load(dataset[:, 0]
-    #Y = np.stack(dataset[:, 2]).astype(np.float64)
     datasets = ast.literal_eval(args.datasets)
     columns = ast.literal_eval(args.columns)
 
     ds_path = os.path.join(args.datasets_root, datasets[0][0])
-    gen_train = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=0, read_length=8, augment=True)
+    gen_train = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=0, read_length=8, augment=args.augmentations)
     gen_val = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=8, read_length=1)
     gen_test = dataset_generator.DataGenerator(ds_path, args.batch_size, columns=columns, seek=9, read_length=1)
-
-    # X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns)
-
-    # X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.5, shuffle=False)
-    # X_test, X_val, Y_test, Y_val = train_test_split(X, Y, test_size=0.5)
-
-    # for dataset in datasets[1:]:
-    #     X2, Y2 = dataset_loader.loadXY(args.datasets_root, *dataset, columns=columns)
-    #     X_train = np.concatenate([X_train, X2])
-    #     Y_train = np.concatenate([Y_train, Y2])
-
-    # X_train, Y_train = sklearn.utils.shuffle(X_train, Y_train)
-
-#    print(len(X))
-#    inds = np.abs(Y[:, 0]) < 15
-#    X = X[inds]
-#    Y = Y[inds, 1]
-#    print(len(X))
 
     X, Y = dataset_loader.loadXY(args.datasets_root, *datasets[0], columns=columns, suffix=0)
     input_shape = X[0].shape
@@ -72,22 +44,21 @@ def main(args):
     models_dict['simple2'] = models.ModelSimple2
     models_dict['simple3'] = models.ModelSimple3
     models_dict['simple_good'] = models.ModelSimple_good
-    models_dict['NVIDIA'] = models.ModelNVIDIA
+    models_dict['NVIDIA_MAE'] = models.ModelNVIDIA_MAE
+    models_dict['NVIDIA_MSE'] = models.ModelNVIDIA_MSE
 
     if args.model in models_dict:
         model = models_dict[args.model](input_shape, output_len)
     else:
         model = models.ModelFromFile(args.model)
 
-    #hist = model.fit(X_train, Y_train, batch_size=args.batch_size, epochs=args.epochs, validation_data=(X_val, Y_val))
-    #model.train(X_train, Y_train, X_val, Y_val, epochs=args.epochs, batch_size=args.batch_size)
     hist = model.fit_generator(gen_train, epochs=args.epochs, validation_data=gen_val)
 
     print('fitted')
 
-    #train_mae = 'Train MAE: {}'.format(model.evaluate_generator(gen_train))
-    validation_mae = 'Validation MAE: {}'.format(model.evaluate_generator(gen_val))
-    test_mae = 'Test MAE: {}'.format(model.evaluate_generator(gen_test))
+    #train_mse = 'Train MSE: {}'.format(model.evaluate_generator(gen_train))
+    validation_mse = 'Validation: {}'.format(model.evaluate_generator(gen_val))
+    test_mse = 'Test: {}'.format(model.evaluate_generator(gen_test))
     total_time = 'Total Time: {}s'.format(time.time() - t)
 
     if args.save_to:
@@ -96,14 +67,14 @@ def main(args):
             f.write(args.model + '\n')
             f.write(str(sys.argv) + '\n')
             f.write(str(hist.history) + '\n')
-            f.write(validation_mae + '\n')
-            f.write(test_mae + '\n')
+            f.write(validation_mse + '\n')
+            f.write(test_mse + '\n')
             f.write(total_time + '\n')
             commit = os.popen('git log -n 1').read()
             f.write(commit)
 
-    print(validation_mae)
-    print(test_mae)
+    print(validation_mse)
+    print(test_mse)
     print(total_time)
 
 if __name__ == '__main__':
@@ -152,6 +123,12 @@ if __name__ == '__main__':
            dest='datasets_root',
            default='/home/vlad/nvidia/datasets',
            help='Datasets root folder.')
+    argparser.add_argument(
+           '--augmentations',
+           metavar='AUG',
+           default=0,
+           type=int,
+           help='Number of augmentations per image')
 
     args = argparser.parse_args()
     main(args)
