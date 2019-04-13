@@ -10,6 +10,7 @@ from keras.models import model_from_json
 from keras.layers import Dense, Dropout, Flatten, Activation, Concatenate, Input, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D
 
+
 from abc import ABC, abstractmethod
 
 import numpy as np

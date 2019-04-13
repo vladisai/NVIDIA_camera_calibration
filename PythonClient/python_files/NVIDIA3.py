@@ -15,6 +15,25 @@ from keras.backend.tensorflow_backend import set_session
 import os
 
 def main(args):
+    import neptune
+
+    callbacks = []
+
+    if args.neptune is not None:
+        from keras.callbacks import Callback
+
+        class NeptuneMonitor(Callback):
+            def on_epoch_end(self, epoch, logs={}):
+                for key, val in logs.items():
+                    neptune.send_metric(key, epoch, val)
+
+        monitor = NeptuneMonitor()
+        # same token as above
+        # make sure to put correct project_qualified_name
+        neptune.init(api_token=args.neptune,
+                     project_qualified_name='vlad/NVIDIA')
+        neptune.create_experiment()
+
     t = time.time()
 
     datasets = ast.literal_eval(args.datasets)
@@ -52,7 +71,7 @@ def main(args):
     else:
         model = models.ModelFromFile(args.model)
 
-    hist = model.fit_generator(gen_train, epochs=args.epochs, validation_data=gen_val)
+    hist = model.fit_generator(gen_train, epochs=args.epochs, validation_data=gen_val, callbacks=callbacks)
 
     print('fitted')
 
@@ -76,6 +95,9 @@ def main(args):
     print(validation_mse)
     print(test_mse)
     print(total_time)
+
+    if args.neptune is not None:
+        neptune.stop()
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description=__doc__)
@@ -129,6 +151,10 @@ if __name__ == '__main__':
            default=0,
            type=int,
            help='Number of augmentations per image')
+    argparser.add_argument(
+           '--neptune',
+           default=None,
+           help='neptune key')
 
     args = argparser.parse_args()
     main(args)

@@ -501,6 +501,11 @@ def main():
         dest='model',
         default=None,
         help='model name to load')
+    argparser.add_argument(
+        '--test',
+        action='store_true',
+        dest='test',
+        help='test model, output nothing but frames time to collision')
 
     args = argparser.parse_args()
     args.out_filename_format = 'out/episode_{:0>4d}/{:s}/{:0>6d}'

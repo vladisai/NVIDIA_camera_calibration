@@ -25,12 +25,12 @@ from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
 
-last_saved = False
+last_saved = -1
 
 def run_carla_client(args):
     # Here we will run 3 episodes with 300 frames each.
-    number_of_episodes = 600
-    frames_per_episode = 1800
+    number_of_episodes = args.episodes
+    frames_per_episode = args.frames
 
     # We assume the CARLA server is already waiting for a client to connect at
     # host:port. To create a connection we can use the `make_carla_client`
@@ -68,12 +68,11 @@ def run_carla_client(args):
                 # frame.
 
                 # The default camera captures RGB images of the scene.
-                camera0 = Camera('CameraRGB_roll')
-                camera0.set_image_size(160, 120)
+                camera0 = Camera('CameraRGB_clean')
+                camera0.set_image_size(320, 180)
                 camera0.set_position(2.00, 0.0, 1.10)
-                camera0.set_rotation(pitch=pitch, yaw=0, roll=0)
 
-                camera1 = Camera('CameraRGB_clean')
+                camera1 = Camera('CameraRGB_clean_small')
                 camera1.set_image_size(160, 120)
                 camera1.set_position(2.00, 0.0, 1.10)
 
@@ -97,10 +96,10 @@ def run_carla_client(args):
 
                 settings.add_sensor(camera0)
                 settings.add_sensor(camera1)
-                settings.add_sensor(camera1_1)
-                settings.add_sensor(camera1_2)
-                settings.add_sensor(camera2)
-                settings.add_sensor(camera3)
+                # settings.add_sensor(camera1_1)
+                # settings.add_sensor(camera1_2)
+                # settings.add_sensor(camera2)
+                # settings.add_sensor(camera3)
 
             else:
 
@@ -133,29 +132,28 @@ def run_carla_client(args):
                 # Print some of the measurements.
                 print_measurements(measurements)
 
-
                 def should_save(frame, measurements):
                     global last_saved
                     if frame < 40:
                         return False
-                    if last_saved:
+                    if last_saved == frame - 5:
                         print('last saved')
-                        last_saved = False
+                        last_saved = -100
                         return True
                     if measurements.player_measurements.forward_speed < 1:
                         if random.random() < 0.01:
                             print('random slow')
-                            last_saved = True
+                            last_saved = frame
                             return True
                         else:
                             return False
                     if frame % 50 == 0:
                         print('50')
-                        last_saved = True
+                        last_saved = frame
                         return True
                     if random.random() < abs(measurements.player_measurements.autopilot_control.steer) ** 2 * 10:
                         print('steer {}'.format(measurements.player_measurements.autopilot_control.steer))
-                        last_saved = True
+                        last_saved = frame
                         return True
                     else:
                         return False
@@ -163,7 +161,7 @@ def run_carla_client(args):
 
                 # Save the images to disk if requested.
                 if args.save_images_to_disk:
-                    if should_save(frame, measurements):
+                    if args.save_all or should_save(frame, measurements):
                         print('saving frame ', frame)
                         for name, measurement in sensor_data.items():
                             filename = args.out_filename_format.format(episode, name, frame)
@@ -291,6 +289,21 @@ def main():
         dest='settings_filepath',
         default=None,
         help='Path to a "CarlaSettings.ini" file')
+    argparser.add_argument(
+        '--save_all',
+        default=False,
+        action='store_true',
+        help='save all images')
+    argparser.add_argument(
+        '--episodes',
+        default=600,
+        type=int,
+        help='Number of episodes to record')
+    argparser.add_argument(
+        '--frames',
+        default=1800,
+        type=int,
+        help='Number of frames per epiosode to record')
 
     args = argparser.parse_args()
 

@@ -106,11 +106,24 @@ class Dataset:
         dirs = os.listdir(path)
         random.shuffle(dirs)
         self.dataset = []
+        self.passed = 0
+
         for d in dirs:
             self.dataset.extend(self.add_episode(os.path.join(path, d), camera_dir, pairs))
             if limit > 0 and len(self.dataset) > limit:
                 break
         self.dataset = np.stack(np.array(self.dataset))
+        print('passed {}'.format(self.passed))
+
+    def should_get(self, steer):
+        if abs(steer) > 0.05:
+            return True
+        else:
+            if np.random.uniform(0, 1) < 0.012:
+                return True
+                print('took it')
+            else:
+                return False
     
     def get_dataset(self):
         return self.dataset
@@ -133,7 +146,11 @@ class Dataset:
                     if check_is_following(image_path_last, image_path):
                         result.append([image_path, image_path_last, *pitch, *get_car_info(measurement_path)])
                 else:
-                    result.append([image_path, *pitch, *get_car_info(measurement_path)])
+                    speed, steer, throttle, brake = get_car_info(measurement_path)
+                    if self.should_get(steer):
+                        result.append([image_path, *pitch, speed, steer, throttle, brake])
+                    else:
+                        self.passed += 1
                 image_path_last = image_path
             except Exception as e:
                 print('error loading {}: {}'.format(image_file, str(e)))
