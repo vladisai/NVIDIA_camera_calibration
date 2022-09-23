@@ -30,7 +30,7 @@ pandas==0.24.1
 pick==0.6.4
 Pillow==4.0.0
 prettytable==0.7.2
-protobuf==3.6.1
+protobuf==3.18.3
 pyasn1==0.4.5
 pyasn1-modules==0.2.4
 pyfiglet==0.8.post1
